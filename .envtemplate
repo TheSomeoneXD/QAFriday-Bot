@@ -1,0 +1,8 @@
+# Rename this file to .env
+
+# Bot Token
+TOKEN=
+
+# Queue Voice Channel
+QUEUE_VC=
+

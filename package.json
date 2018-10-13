@@ -1,0 +1,30 @@
+{
+  "name": "qafriday",
+  "version": "1.0.0",
+  "description": "Puts random people into the stream voice channel",
+  "main": "QAFriday.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/TheSomeoneXD/QAFriday-Bot.git"
+  },
+  "keywords": [
+    "discord",
+    "bot",
+    "discord.js",
+    "gdu",
+    "voice"
+  ],
+  "author": "TheSomeoneXD",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/TheSomeoneXD/QAFriday-Bot/issues"
+  },
+  "homepage": "https://github.com/TheSomeoneXD/QAFriday-Bot#readme",
+  "dependencies": {
+    "discord.js": "^11.4.2",
+    "dotenv": "^6.1.0"
+  }
+}
