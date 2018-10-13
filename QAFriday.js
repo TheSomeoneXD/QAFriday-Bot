@@ -13,6 +13,7 @@ var BotEnumState = {
 var botState = BotEnumState.INACTIVE;
 
 var queueVCList = [];
+var alreadyHaveWent = [];
 var userInVC;
 
 // The ready event is vital, it means that your bot will only start reacting to information
@@ -61,6 +62,10 @@ client.on('message', async message => {
                         if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
                         sendUsers(message, getNumber(args[1]));
                         return;
+                    case "l":
+                        if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
+                        sendUsers(message, getNumber(args[1]));
+                        return;
                 }
 
                 // Only admins can use the next commands here
@@ -83,7 +88,7 @@ client.on('message', async message => {
                         nextUser(message);
                         break;
                     case "n":
-                        nextEmbed(message);
+                        nextUser(message);
                         break;
                 }
             }
@@ -99,8 +104,11 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
   
     // If oldUserChannel doesn't exist, and newUserChannelDoes
     if (!oldUserChannel && newUserChannel === client.channels.get(process.env.QUEUE_VC)) {
-        queueVCList.push(newMember);
-        console.log(`Added ${newMember.displayName} to queueVCList.`);
+        // If user hasn't gone already
+        if (!alreadyHaveWent.includes(newMember)) {
+            queueVCList.push(newMember);
+            console.log(`Added ${newMember.displayName} to queueVCList.`);
+        }
     } else if (!newUserChannel) {
         var member = queueVCList.findIndex(m => m.id === oldMember.id);
         if (member !== -1) {
@@ -174,7 +182,9 @@ function hasNotStarted(message) {
 
 // Starts a Q&A session
 function startQASession(message) {
-    if (botState !== BotEnumState.INACTIVE) return message.channel.send(`${message.author} Q&A has already started! Use **!qa stop** to stop a Q&A session.`);
+    if (botState !== BotEnumState.INACTIVE) return message.channel.send(`${message.author} Q&A has already started! Use **!qa next** to bring the first person to <#${process.env.STREAM_VC}>, or use **!qa stop** to stop a Q&A session.`);
+    alreadyHaveWent = [];
+    userInVC = undefined;
     const startEmbed = new Discord.RichEmbed()
         .setAuthor(client.user.username, client.user.avatarURL)
         .setTitle("Starting Q&A Friday!")
@@ -202,9 +212,17 @@ function stopQASession(message) {
 // Moves onto the next user
 function nextUser(message) {
     if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
-    var newMember = queueVCList[0];
+    
+    // Sets old user in VC to go back into queue
+    if (userInVC) userInVC.setVoiceChannel(process.env.QUEUE_VC);
 
+    // If there's a member in the list
+    var newMember = queueVCList[0];
     if (newMember) {
+        alreadyHaveWent.push(newMember);
+        userInVC = newMember;
+
+        // Sets voice channel and removes user from queueVCList
         newMember.setVoiceChannel(process.env.STREAM_VC);
         queueVCList.shift();
 
@@ -221,7 +239,8 @@ function nextUser(message) {
             .setAuthor(client.user.username, client.user.avatarURL)
             .setTitle("Finished Queue")
             .setColor('BLUE')
-            .setDescription(`There is no one left in the ${process.env.QUEUE_VC} voice channel in queue!`)
+            .setDescription(`There is no one left in the <#${process.env.QUEUE_VC}> voice channel in queue!`)
+            .setFooter(`You can end the Q&A with !qa stop.`)
 
         message.channel.send({embed: nextEmbed});
     }
@@ -248,7 +267,6 @@ async function sendUsers(message, pageNum, newMessage) {
     console.log(pageNum);
 
     var displayNameString = "";
-    var queueIncrement = 1;
 
     // Grabs user in loop, parses it, then adds it to "displayNameString" variable
     if (groupedArr[pageNum - 1]) {
@@ -256,7 +274,6 @@ async function sendUsers(message, pageNum, newMessage) {
             var actualQueueNumber = queueVCList.findIndex(m => m.user.id === element.user.id)
             console.log("[Actual Queue Num]" + actualQueueNumber);
             displayNameString += `${actualQueueNumber + 1}: ${element}\n`;
-            queueIncrement++;
         });
     }
 
@@ -275,7 +292,7 @@ async function sendUsers(message, pageNum, newMessage) {
         .setAuthor(client.user.username, client.user.avatarURL)
         .setTitle("Q&A Friday Users")
         .setColor('BLUE')
-        .setDescription(`If your name is not on here, try disconnecting and reconnecting to <#${process.env.QUEUE_VC}>.`)
+        .setDescription(`If your name is not on here, try disconnecting and reconnecting to <#${process.env.QUEUE_VC}>.\n\nUsers cannot go twice, until the next Q&A Friday! If for some reason a user disconnects and needs to reconnect, it will have to be done by an admin.`)
         .addField(`In Voice Chat (Page ${moddedPageNum}/${moddedLength})`, displayNameString)
 
     var usersMessage;
@@ -289,7 +306,7 @@ async function sendUsers(message, pageNum, newMessage) {
     // Collector for emotes
     const emotes = ['⬅', '❌', '➡'];
     const collector = usersMessage.createReactionCollector(
-        (reaction, user) => emotes.includes(reaction.emoji.name) && user.id !== client.user.id && user.id === message.author.id, { time: 15 * 1000 });
+        (reaction, user) => emotes.includes(reaction.emoji.name) && user.id !== client.user.id && user.id === message.author.id, { time: 60 * 1000 });
     var react = "";
     var endedOnReact;
     

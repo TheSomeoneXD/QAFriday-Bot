@@ -1,8 +1,16 @@
-# Rename this file to .env
+# TEMPLATE ENV FILE
+
+# Prefix
+PREFIX="!"
 
 # Bot Token
-TOKEN=
+TOKEN=""
+
+# Server ID
+SERVER_ID=""
 
 # Queue Voice Channel
-QUEUE_VC=
+QUEUE_VC=""
+STREAM_VC=""
+
 
