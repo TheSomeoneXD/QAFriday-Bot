@@ -4,6 +4,8 @@
 # Description
 This is the Q&amp;A Friday Bot for Game Dev Underground. It transports users from a voice channel queue, to a private voice channel, for use on stream!
 
+- [Game Dev Underground Invite Link](https://discord.gg/mP98ZYv)
+
 # Run the Bot
 ## Requirements:
 You will need:
@@ -26,7 +28,7 @@ You will need:
     # If you already haven't, clone the repo
     git clone https://github.com/TheSomeoneXD/QAFriday-Bot
     cd "QAFriday-Bot"
-    
+
     npm i
     node QAFriday.js
     ```
