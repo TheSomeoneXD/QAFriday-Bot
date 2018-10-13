@@ -15,20 +15,20 @@ You will need:
 1. Clone the repo. 
 
     You can use programs like [Git](https://git-scm.com/), [SourceTree](https://www.sourcetreeapp.com/) or simply download the project, although you won't be getting updates as easily.
+    
+    ```bash
+    git clone https://github.com/TheSomeoneXD/QAFriday-Bot
+    ```
 
-2. Rename the `.envtemplate` file to `.env`, and fill out tokens and channels. 
-
-    On Windows, you must give the .env file a name, but you can circumvent it by using a program like [VS Code](https://code.visualstudio.com/) to rename files!
+2. Rename the `.envtemplate` file to `dev.env`, and fill out tokens and channels.
 
 3. Navigate via command-line to a bot's folder, install dependancies, and run it!
 
     Make sure you're in the project folder!
     On Windows, you can hold Shift and Right Click the folder to get the option of a command prompt, inside that folder.
+    
     ```bash
-    # If you already haven't, clone the repo
-    git clone https://github.com/TheSomeoneXD/QAFriday-Bot
-    cd "QAFriday-Bot"
-
+    cd "QAFriday-Bot"   # Navigate to project folder
     npm i
     node QAFriday.js
     ```
