@@ -1,5 +1,5 @@
 // .env Variables
-require('dotenv').config({path: 'dev.env'});
+require('dotenv').config({path: 'final.env'});
 
 // Node Modules
 const Discord = require('discord.js');
@@ -55,13 +55,7 @@ client.on('message', async message => {
             else {
                 switch (args[0]) {
                     case "users":
-                        if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
-                        sendUsers(message, getNumber(args[1]));
-                        return;
                     case "list":
-                        if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
-                        sendUsers(message, getNumber(args[1]));
-                        return;
                     case "l":
                         if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
                         sendUsers(message, getNumber(args[1]));
@@ -69,24 +63,21 @@ client.on('message', async message => {
                 }
 
                 // Only admins can use the next commands here
-                var adminCommands = ["ping", "start", "stop", "end", "next", "n"];
+                var adminCommands = ["ping", "start", "begin", "stop", "end", "next", "n"];
                 if (adminCommands.includes(args[0]) && !isAdmin(message.author.id)) return insufficientPerms(message);
                 
                 switch (args[0]) {
                     case "ping":
                         message.reply("what is your command, almighty master?");
                     case "start":
+                    case "begin":
                         startQASession(message);
                         break;
                     case "stop":
-                        stopQASession(message);
-                        break;
                     case "end":
                         stopQASession(message);
                         break;
                     case "next":
-                        nextUser(message);
-                        break;
                     case "n":
                         nextUser(message);
                         break;
@@ -121,7 +112,9 @@ client.on('voiceStateUpdate', (oldMember, newMember) => {
 // Gets if user is an admin (or me)
 function isAdmin(userID) {
     var guild = client.guilds.get(process.env.SERVER_ID);
-    return guild.members.get(userID).roles.find(role => role.name === "Admins") || userID === '200340393596944384' || userID === '433759248800022532';
+    // TheSomeoneXD, *Totally NOT the FBI*
+    const admins = ["200340393596944384", "433759248800022532"];
+    return guild.members.get(userID).roles.find(role => role.name === "Admins") || admins.some(i => i === userID);
 }
 
 // Async waiting
@@ -250,7 +243,7 @@ function nextUser(message) {
 async function sendUsers(message, pageNum, newMessage) {
     const listAmount = 2;
     var groupedArr = createGroupedArray(queueVCList, listAmount);
-    console.log(groupedArr);
+    //console.log(groupedArr);
     
     // Sets a default page num, or makes it human readable
     if (pageNum === undefined) pageNum = 1; else {
@@ -264,7 +257,7 @@ async function sendUsers(message, pageNum, newMessage) {
         if (!groupedArr.length === 0) return;  
     }
 
-    console.log(pageNum);
+    //console.log(pageNum);
 
     var displayNameString = "";
 
@@ -272,14 +265,14 @@ async function sendUsers(message, pageNum, newMessage) {
     if (groupedArr[pageNum - 1]) {
         groupedArr[pageNum - 1].forEach(element => {
             var actualQueueNumber = queueVCList.findIndex(m => m.user.id === element.user.id)
-            console.log("[Actual Queue Num]" + actualQueueNumber);
+            //console.log("[Actual Queue Num]" + actualQueueNumber);
             displayNameString += `${actualQueueNumber + 1}: ${element}\n`;
         });
     }
 
     // No users message to fill field
     if (displayNameString === "") displayNameString = "None currently."
-    console.log(displayNameString);
+    //console.log(displayNameString);
 
     // To make the message of "Page 1/0" with no users not happen
     var moddedLength = groupedArr.length;
@@ -314,7 +307,7 @@ async function sendUsers(message, pageNum, newMessage) {
     if (!newMessage) {
         for (let i = 0; i < emotes.length; i++) {
             const element = emotes[i];
-            console.log(element);
+            //console.log(element);
             await usersMessage.react(element);   
         }
     }
@@ -334,7 +327,10 @@ async function sendUsers(message, pageNum, newMessage) {
 
         if (!endedOnReact) {
             usersMessage.clearReactions();
-            return message.channel.send(":x: **Timed Out**: The emote reaction request timed out after 15 seconds.");
+            
+            // Uncomment to enable this
+            //message.channel.send(":x: **Timed Out**: The emote reaction request timed out after 15 seconds.");
+            return
         }
         if (react === '❌') {
             usersMessage.clearReactions();
@@ -344,7 +340,7 @@ async function sendUsers(message, pageNum, newMessage) {
         var pageNumModifier = 0;
         if (react === emotes[0]) pageNumModifier -= 1;
         if (react === emotes[2]) pageNumModifier += 1;
-        console.log(pageNum + " | " + pageNumModifier);
+        //console.log(pageNum + " | " + pageNumModifier);
         sendUsers(message, pageNum + pageNumModifier, usersMessage);
     });
 }
