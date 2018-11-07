@@ -16,6 +16,25 @@ var queueVCList = [];
 var alreadyHaveWent = [];
 var userInVC;
 
+const statusMessages = [
+    {
+        id: "qa",
+        text: '!qa | Q&A Friday LIVE',
+        presence: {
+            type: "STREAMING",
+            url: "https://www.twitch.tv/timruswick"
+        }
+    }, 
+    {
+        id: "projman",
+        text: '!listhelp | GDU Project Manager',
+        presence: {
+            type: "PLAYING"
+        }
+    }
+];
+var statusIndex = 1;
+
 // The ready event is vital, it means that your bot will only start reacting to information
 // from Discord _after_ ready is emitted
 client.on('ready', async () => {
@@ -29,8 +48,8 @@ client.on('ready', async () => {
 
     // You can set status to 'online', 'invisible', 'away', or 'dnd' (do not disturb)
     client.user.setStatus('online');
-    // Sets your "Playing"
-    client.user.setActivity("!qa | Q&A Friday Bot");
+    changePresence("projman");
+    
     console.log(`Connected! \
     \nLogged in as: ${client.user.username} - (${client.user.id})`);
 });
@@ -70,7 +89,7 @@ client.on('message', async message => {
                 }
 
                 // Only admins can use the next commands here
-                var adminCommands = ["start", "begin", "stop", "end", "next", "n", "remove", "r"];
+                var adminCommands = ["start", "begin", "stop", "end", "next", "n", "remove", "r", "playing"];
                 if (adminCommands.includes(args[0]) && !isAdmin(message.author.id)) return insufficientPerms(message);
                 
                 switch (args[0]) {
@@ -90,8 +109,11 @@ client.on('message', async message => {
                     case "r":
                         removeStreamVCUser(message);
                         break;
+                    case "playing":
+                        changePresence(args[1]);
+                        break;
                     default:
-                        message.channel.send(`${message.author} Unknown command. For a list of commands, use **!qa** to display them.`);
+                        message.channel.send(`${message.author} Unknown command. For a list of commands, use **!qa** to display them!`);
                         break;
                 }
             }
@@ -126,7 +148,7 @@ function isAdmin(userID) {
     var guild = client.guilds.get(process.env.SERVER_ID);
     // TheSomeoneXD, *Totally NOT the FBI*
     const admins = ["200340393596944384", "433759248800022532"];
-    return guild.members.get(userID).roles.find(role => role.name === "Admins") || admins.some(i => i === userID);
+    return guild.members.get(userID).roles.find(role => role.name === "Admins") || admins.includes(userID);
 }
 
 // Async waiting
@@ -153,6 +175,21 @@ function getNumber(args) {
         if (Number.isSafeInteger(num)) {
             return num;
         }
+    }
+}
+
+// Changes the presence of the bot by IDs
+function changePresence(id) {
+    /*
+        You can only update the playing message 5 times a minute.
+        If you exceed that limit, it will silently drop the request.
+    */
+    var index = statusMessages.findIndex(status => status.id === id)
+    if (index !== -1) {
+        const element = statusMessages[index];
+        client.user.setActivity(element.text, element.presence);
+    } else {
+        console.warn("Was given an ID that doesn't exist!");
     }
 }
 
@@ -201,6 +238,7 @@ function startQASession(message) {
     
     message.channel.send({embed: startEmbed});
     botState = BotEnumState.ACTIVE;
+    changePresence("qa");
 }
 
 // Stops a Q&A session
@@ -214,6 +252,7 @@ function stopQASession(message) {
     
     message.channel.send({embed: stopEmbed});
     botState = BotEnumState.INACTIVE;
+    changePresence("projman");
 }
 
 // Moves onto the next user

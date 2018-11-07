@@ -12,5 +12,3 @@ SERVER_ID=""
 # Queue Voice Channel
 QUEUE_VC=""
 STREAM_VC=""
-
-
