@@ -39,8 +39,7 @@ client.on('ready', async () => {
 client.on('message', async message => {
     // Ignores ALL bot messages
     if (message.author.bot) return;
-    // Message has to be in Outskirts (should be edited later)
-    //if (!(message.channel.id === process.env.TAVERN_CHANNEL_ID || message.channel.id === process.env.TEST_CHANNEL_ID)) return;
+
     // Has to be (prefix)command
     if (message.content.indexOf(process.env.PREFIX) !== 0) return;
 
@@ -56,19 +55,25 @@ client.on('message', async message => {
                 switch (args[0]) {
                     case "users":
                     case "list":
+                    case "u":
                     case "l":
                         if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
                         sendUsers(message, getNumber(args[1]));
                         return;
+                    case "ping":
+                        if (isAdmin(message.author.id)) message.reply("what is your command, *almighty* and *glorious* master?");
+                        else message.reply("Pong!")
+                        return;
+                    case "help":
+                        help(message);
+                        return;
                 }
 
                 // Only admins can use the next commands here
-                var adminCommands = ["ping", "start", "begin", "stop", "end", "next", "n"];
+                var adminCommands = ["start", "begin", "stop", "end", "next", "n", "remove", "r"];
                 if (adminCommands.includes(args[0]) && !isAdmin(message.author.id)) return insufficientPerms(message);
                 
                 switch (args[0]) {
-                    case "ping":
-                        message.reply("what is your command, almighty master?");
                     case "start":
                     case "begin":
                         startQASession(message);
@@ -80,6 +85,13 @@ client.on('message', async message => {
                     case "next":
                     case "n":
                         nextUser(message);
+                        break;
+                    case "remove":
+                    case "r":
+                        removeStreamVCUser(message);
+                        break;
+                    default:
+                        message.channel.send(`${message.author} Unknown command. For a list of commands, use **!qa** to display them.`);
                         break;
                 }
             }
@@ -150,14 +162,16 @@ function help(message) {
         .setAuthor(client.user.username, client.user.avatarURL)
         .setTitle("Q&A Friday Bot")
         //.setColor(message.guild.members.get(client.user.id).displayColor)
-        .setColor('BLUE')
+        .setColor('#FC7A44')
         .setDescription(
             `This is the Q&A Friday bot, where it drops users from a queue voice channel, into the stream voice channel. What else do you expect? **Lootboxes!?**` +
             `\n\nHere is the [**GitHub**](https://github.com/TheSomeoneXD/QAFriday-Bot) page if you would like to view, use, and modify the code yourself. This was written in discord.js, under MIT.`)
-        .addField("!qa start", "Starts a Q&A session.", true)
-        .addField("!qa stop", "Stops a Q&A session.", true)
-        .addField("!qa next", "Goes to next person in queue.", true)
-        .addField("!qa list", "Views all users in queue.", true)
+        .addField("!qa start",  "Starts a Q&A session.",            true)
+        .addField("!qa stop",   "Stops a Q&A session.",             true)
+        .addField("!qa next",   "Goes to next person in queue.",    true)
+        .addField("!qa list",   "Views all users in queue.",        true)
+        .addField("!qa ping",   "Pings the bot.",                   true)
+        .addField("!qa remove", "Removes current user from VC.",    true)
         .setFooter("💙 Created by TheSomeoneXD, for Game Dev Underground.")
 
     message.channel.send(embed);
@@ -181,7 +195,7 @@ function startQASession(message) {
     const startEmbed = new Discord.RichEmbed()
         .setAuthor(client.user.username, client.user.avatarURL)
         .setTitle("Starting Q&A Friday!")
-        .setColor('BLUE')
+        .setColor('#FC7A44')
         .setDescription(`Join <#${process.env.QUEUE_VC}> to chat with ${message.member.displayName}.`)
         .setFooter("Remember to mute Tim's stream once you're in, or else you will lose all sanity.")
     
@@ -195,7 +209,7 @@ function stopQASession(message) {
     const stopEmbed = new Discord.RichEmbed()
         .setAuthor(client.user.username, client.user.avatarURL)
         .setTitle("Q&A Friday has ended!")
-        .setColor('BLUE')
+        .setColor('#FC7A44')
         .setDescription(`Thanks for joining us, everyone!`)
     
     message.channel.send({embed: stopEmbed});
@@ -205,9 +219,6 @@ function stopQASession(message) {
 // Moves onto the next user
 function nextUser(message) {
     if (botState !== BotEnumState.ACTIVE) return hasNotStarted(message);
-    
-    // Sets old user in VC to go back into queue
-    if (userInVC) userInVC.setVoiceChannel(process.env.QUEUE_VC);
 
     // If there's a member in the list
     var newMember = queueVCList[0];
@@ -222,7 +233,7 @@ function nextUser(message) {
         const nextEmbed = new Discord.RichEmbed()
             .setAuthor(client.user.username, client.user.avatarURL)
             .setTitle("New User")
-            .setColor('BLUE')
+            .setColor('#FC7A44')
             .setDescription(`${newMember} has been transferred to the <#${process.env.STREAM_VC}> voice channel!`)
             .setFooter(`There are ${queueVCList.length} users in queue, currently.`)
 
@@ -231,7 +242,7 @@ function nextUser(message) {
         const nextEmbed = new Discord.RichEmbed()
             .setAuthor(client.user.username, client.user.avatarURL)
             .setTitle("Finished Queue")
-            .setColor('BLUE')
+            .setColor('#FC7A44')
             .setDescription(`There is no one left in the <#${process.env.QUEUE_VC}> voice channel in queue!`)
             .setFooter(`You can end the Q&A with !qa stop.`)
 
@@ -239,7 +250,7 @@ function nextUser(message) {
     }
 }
 
-// Sends users into chat, with a SANCTUM-like inventory menu
+// Sends users into chat, with the SANCTUM-ish inventory menu
 async function sendUsers(message, pageNum, newMessage) {
     const listAmount = 2;
     var groupedArr = createGroupedArray(queueVCList, listAmount);
@@ -284,7 +295,7 @@ async function sendUsers(message, pageNum, newMessage) {
     const usersEmbed = new Discord.RichEmbed()
         .setAuthor(client.user.username, client.user.avatarURL)
         .setTitle("Q&A Friday Users")
-        .setColor('BLUE')
+        .setColor('#FC7A44')
         .setDescription(`If your name is not on here, try disconnecting and reconnecting to <#${process.env.QUEUE_VC}>.\n\nUsers cannot go twice, until the next Q&A Friday! If for some reason a user disconnects and needs to reconnect, it will have to be done by an admin.`)
         .addField(`In Voice Chat (Page ${moddedPageNum}/${moddedLength})`, displayNameString)
 
@@ -343,6 +354,11 @@ async function sendUsers(message, pageNum, newMessage) {
         //console.log(pageNum + " | " + pageNumModifier);
         sendUsers(message, pageNum + pageNumModifier, usersMessage);
     });
+}
+
+// Sets old user in VC to go back into queue
+function removeStreamVCUser(message) {      
+    if (userInVC) userInVC.setVoiceChannel(process.env.QUEUE_VC);
 }
 
 // Log our bot in (change the token by looking into the .env file)
