@@ -33,7 +33,6 @@ const statusMessages = [
         }
     }
 ];
-var statusIndex = 1;
 
 // The ready event is vital, it means that your bot will only start reacting to information
 // from Discord _after_ ready is emitted
