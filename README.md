@@ -1,6 +1,9 @@
 # QAFriday-Bot
 [![Game Dev Underground](https://img.shields.io/badge/gdu-discord-%237289DA.svg?logo=discord)](https://discord.gg/mP98ZYv)
 
+# NOTE ON ARCHIVAL
+This code has been archived due to not being maintained, and lack of use.
+
 # Description
 This is the Q&amp;A Friday Bot for Game Dev Underground. It transports users from a voice channel queue, to a private voice channel, for use on stream!
 
